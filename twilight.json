@@ -3,46 +3,12 @@
     "ar": "هدايا بريميوم",
     "en": "premium-gifts"
   },
-  "support": {
-    "features": [
-      "colors",
-      "fonts",
-      "mega-menu",
-      "breadcrumb"
-    ]
-  },
   "settings": [
     {
       "type": "color",
       "id": "color_primary",
-      "label": "اللون الأساسي (أزرار، نصوص مميزة)",
+      "label": "اللون الأساسي",
       "value": "#D4AF37"
-    },
-    {
-      "type": "color",
-      "id": "color_dark",
-      "label": "اللون الداكن (خلفيات، تذييل)",
-      "value": "#111827"
-    }
-  ],
-  "components": [
-    {
-      "name": "premium-hero",
-      "title": {
-        "en": "Premium Hero Banner",
-        "ar": "بانر الواجهة الفخم"
-      },
-      "icon": "sicon-image",
-      "path": "home.premium-hero"
-    },
-    {
-      "name": "corporate-features",
-      "title": {
-        "en": "Corporate Features",
-        "ar": "مميزات هدايا الشركات"
-      },
-      "icon": "sicon-star2",
-      "path": "home.corporate-features"
     }
   ]
 }

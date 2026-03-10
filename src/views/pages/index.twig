@@ -6,9 +6,48 @@
 | page.slug        | string     | ex: "cat.show"                                                      |
 #}
 {% extends "layouts.master" %}
+
 {% block content %}
-    {% component home %}
-{% endblock %}
-{% block scripts %}
-    <script defer src="{{ 'home.js' | asset }}"></script>
-{% endblock %}
+    {# واجهة الترحيب الديناميكية (Hero Section) #}
+    <section class="relative bg-white pt-16 pb-20 lg:pt-24 lg:pb-28 overflow-hidden">
+        <div class="container mx-auto px-4 md:px-8 flex flex-col lg:flex-row items-center">
+            
+            <div class="lg:w-1/2 z-10 text-center lg:text-right mb-12 lg:mb-0 pr-0 lg:pr-8">
+                <span class="inline-block py-1 px-3 rounded-full bg-gray-50 text-primary text-sm font-bold mb-6 border border-gray-100">
+                    ✨ خيارك الأول للفخامة والتميز
+                </span>
+                
+                {# سحب اسم المتجر ديناميكياً #}
+                <h1 class="text-5xl lg:text-6xl font-extrabold text-dark-custom leading-tight mb-6">
+                    مرحباً بك في <br>
+                    <span class="text-primary">{{ store.name }}</span>
+                </h1>
+                
+                {# سحب وصف المتجر ديناميكياً #}
+                <p class="text-lg text-gray-500 mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                    {{ store.description | default('نقدم لك مجموعة فريدة من المنتجات والهدايا المصممة خصيصاً لتناسب ذوقك الرفيع وتوثق أجمل لحظاتك.') }}
+                </p>
+                
+                <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4 sm:space-x-reverse">
+                    <a href="{{ link('/categories') }}" class="w-full sm:w-auto px-8 py-4 bg-primary hover:opacity-90 text-white font-bold rounded-xl shadow-lg transition transform hover:-translate-y-1 text-center">
+                        تسوق التشكيلة
+                    </a>
+                </div>
+            </div>
+            
+            <div class="lg:w-1/2 relative">
+                {# صورة تعبيرية فخمة (يمكن للتاجر تغييرها لاحقاً من المكونات) #}
+                <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1000&q=80" alt="{{ store.name }}" class="relative z-10 w-full h-auto rounded-2xl shadow-2xl border-4 border-white object-cover aspect-[4/3] hover-lift">
+            </div>
+            
+        </div>
+    </section>
+
+    {% hook 'home:start' %}
+    
+    {% for component in components %}
+        {% component component.path with {component: component} %}
+    {% endfor %}
+    
+    {% hook 'home:end' %}
+    {% endblock %}

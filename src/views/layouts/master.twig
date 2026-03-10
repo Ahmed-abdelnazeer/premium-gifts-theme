@@ -50,84 +50,128 @@
 | theme.settings.get(settingName, default=null)      | mixed    | get theme setting ex `theme.settings.get('my_var', 'fallback')`                                          |
 #}
 <!DOCTYPE html>
-<html lang="{{ user.language.code }}" dir="{{ user.language.dir }}">
-<!-- بسم الله الرحمن الرحيم -->
+<html lang="{{ lang('code') }}" dir="{{ lang('direction') }}">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {{ theme.settings.set('placeholder', 'images/placeholder.png') }}
-
-    <script defer data-cfasync="false" crossorigin="anonymous" src="{{ 'product-card.js'|asset }}"></script>
-    <script defer src="{{ 'main-menu.js'|asset }}"></script>
-    {% if theme.settings.get('enable_add_product_toast', true) %}
-        <script defer src="{{ 'add-product-toast.js'|asset }}"></script>
-    {% endif %}
-
-    {% block head_scripts %}{% endblock %}
-
-
-    <script data-cfasync="false">
-        window.header_is_sticky = "{{theme.settings.get('header_is_sticky', 'Default Value')}}"
-        window.imageZoom = "{{theme.settings.get('imageZoom')}}"
-        window.can_access_wallet = {{ user.can_access_wallet | json_encode }}
-        window.enable_more_menu = "{{ theme.settings.get('enable_more_menu', true) }}"
-        window.enable_add_product_toast = "{{ theme.settings.get('enable_add_product_toast', true) }}"
-    </script>
+    <title>{{ page.title | default(store.name) }}</title>
     
-    {% hook 'head:start' %}
-    {% hook head %}
-    {% block styles %}{% endblock %}
-    <link rel="stylesheet" href="{{ 'app.css' | asset }}">
-    <link rel="stylesheet" href="{{ theme.font.path|cdn }}"/>
-    <link rel="stylesheet" href="{{ 'fonts/sallaicons.css'|cdn }}"/>
-    
+    {# خطوط جوجل وربط Tailwind CSS #}
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    {# ربط ألوان التاجر الديناميكية اللي حددناها في twilight.json #}
     <style>
         :root {
-            --font-main: '{{theme.font.name}}';
-            --color-primary: {{ theme.color.primary }};
-            --color-primary-dark: {{ theme.color.darker(0.15) }};
-            --color-primary-light: {{ theme.color.lighter(0.15) }};
-            --color-primary-reverse: {{ theme.color.reverse_text }};
+            --color-primary: {{ theme.settings.color_primary | default('#D4AF37') }};
+            --color-dark: {{ theme.settings.color_dark | default('#111827') }};
         }
+        body { font-family: 'Tajawal', sans-serif; background-color: #FAFAFA; }
+        
+        /* كلاسات مخصصة للألوان الديناميكية */
+        .text-primary { color: var(--color-primary); }
+        .bg-primary { background-color: var(--color-primary); }
+        .border-primary { border-color: var(--color-primary); }
+        .text-dark-custom { color: var(--color-dark); }
+        .bg-dark-custom { background-color: var(--color-dark); }
+        
+        /* تأثيرات الحركة */
+        .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
+        html { scroll-behavior: smooth; }
     </style>
-    {# tracking services, custom css feature. #}
-    {% hook 'head:end' %}
+    
+    {# هوك سلة الأساسي (ضروري لإضافة أكواد التتبع والإحصائيات) #}
+    {% hook 'head:start' %}
 </head>
-<body id="app" class="theme-raed overflow-x-hidden {% hook 'body:classes' %}
-  {{ theme.settings.get('footer_is_dark') ? ' footer-is-dark' : ' footer-is-light' }}
-  {{ theme.settings.get('topnav_is_dark') ? ' topnav-is-dark' : '' }}
-  {{ theme.settings.get('sticky_add_to_cart') ? ' is-sticky-product-bar' : '' }}
-  ">
-<noscript>
-    To get full functionality of this site you need to enable JavaScript. Here is how
-    <a href="https://www.enable-javascript.com/" rel="noreferrer"
-       target="_blank">To enable JavaScript on webpage</a>.
-</noscript>
-<div class="app-inner flex flex-col min-h-full">
-    {% hook 'body:start' %}
-    {% component 'header.header' %}
-    <main id="main-content" role="main">
-    {% block content %}{% endblock %}
+<body class="text-gray-800 antialiased flex flex-col min-h-screen overflow-x-hidden">
+
+    {# الشريط العلوي #}
+    <div class="bg-dark-custom text-white text-sm text-center py-2 font-medium tracking-wide">
+        ✨ شحن مجاني لجميع مناطق المملكة للطلبات فوق 300 ر.س ✨
+    </div>
+
+    {# الهيدر الرئيسي #}
+    <header class="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+            
+            {# سحب اللوجو أو اسم المتجر ديناميكياً #}
+            <a href="{{ link('/') }}" class="text-3xl font-extrabold tracking-tight text-dark-custom flex items-center">
+                {% if store.logo %}
+                    <img src="{{ store.logo }}" alt="{{ store.name }}" class="h-10 w-auto">
+                {% else %}
+                    {{ store.name }}
+                {% endif %}
+            </a>
+            
+            {# سحب أقسام المتجر ديناميكياً (هنعرض أول 3 أقسام فقط كمثال) #}
+            <nav class="hidden md:flex space-x-8 space-x-reverse font-medium text-gray-600">
+                <a href="{{ link('/') }}" class="text-dark-custom font-bold border-b-2 border-primary pb-1">الرئيسية</a>
+                {% for category in store.categories | slice(0, 3) %}
+                    <a href="{{ category.url }}" class="hover:text-primary transition duration-300">{{ category.name }}</a>
+                {% endfor %}
+            </nav>
+
+            {# سلة المشتريات الديناميكية #}
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <a href="{{ link('/cart') }}" class="relative text-gray-500 hover:text-primary transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    {# سحب عدد المنتجات في السلة #}
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                        {{ cart.items_count | default(0) }}
+                    </span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    {# هنا بيتم حقن الصفحات المتغيرة (الرئيسية، صفحة المنتج، إلخ) #}
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
     </main>
-    {% component 'footer.footer' %}
-</div>
-{% hook 'body:end' %}
-{% if theme.settings.get('enable_add_product_toast', true) %}
-    <salla-add-product-toast></salla-add-product-toast>
-{% endif %}
-<script defer crossorigin="anonymous" src="{{ 'app.js' | asset }}"></script>
 
-{# Twilight Components #}
-<salla-offer-modal></salla-offer-modal>
-<salla-search></salla-search>
-
-{% if user.type=='guest' %}
-    <salla-login-modal></salla-login-modal>
-{% endif %}
-{% if store.scope %}
-    <salla-scopes selection="{{ store.scope.display_as == 'popup' ? 'mandatory' : 'optional' }}"></salla-scopes>
-{% endif %}
-{% block scripts %}{% endblock %}
+    {# الفوتر الديناميكي #}
+    <footer class="bg-white pt-16 pb-8 border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 md:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div class="md:col-span-2">
+                    <div class="text-3xl font-extrabold tracking-tight text-dark-custom mb-4">
+                        {% if store.logo %}
+                            <img src="{{ store.logo }}" alt="{{ store.name }}" class="h-12 w-auto">
+                        {% else %}
+                            {{ store.name }}
+                        {% endif %}
+                    </div>
+                    <p class="text-gray-500 max-w-sm mb-6">{{ store.description | default('متجر متخصص في تقديم أرقى المنتجات والهدايا المخصصة لعملائنا.') }}</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-dark-custom mb-4">روابط سريعة</h4>
+                    <ul class="space-y-2 text-gray-500 text-sm">
+                        {# سحب الصفحات التعريفية للتاجر (سياسة الاسترجاع، تتبع الطلب..) #}
+                        {% for page in store.pages | slice(0, 4) %}
+                            <li><a href="{{ page.url }}" class="hover:text-primary transition">{{ page.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-dark-custom mb-4">الدفع الآمن</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-600">Mada</span>
+                        <span class="px-3 py-1 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-600">Apple Pay</span>
+                        <span class="px-3 py-1 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-600">Visa</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center text-gray-400 text-sm pt-8 border-t border-gray-100">
+                &copy; {{ 'now' | date('Y') }} {{ store.name }}. جميع الحقوق محفوظة.
+            </div>
+        </div>
+    </footer>
+    
+    {# هوك سلة للإغلاق #}
+    {% hook 'body:end' %}
 </body>
 </html>
